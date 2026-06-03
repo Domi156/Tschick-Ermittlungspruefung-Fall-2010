@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ermittlungsprüfung – Sommerfall 2010</title>
+  <style>
+    :root{
+      --paper:#efe2c6;
+      --paper2:#e2d0a6;
+      --ink:#27211a;
+      --red:#9b1c1c;
+      --green:#2f6b3f;
+      --shadow:rgba(55,38,20,.25);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Georgia, 'Times New Roman', serif;
+      color:var(--ink);
+      background:#2b241d;
+      background-image:
+        radial-gradient(circle at 20% 10%, #4a3b2d 0, transparent 35%),
+        radial-gradient(circle at 80% 20%, #3b3128 0, transparent 35%);
+      min-height:100vh;
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+    header{
+      background:linear-gradient(135deg,var(--paper),var(--paper2));
+      border:2px solid #6b573b;
+      padding:24px;
+      box-shadow:0 10px 30px var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    header:before{
+      content:"";
+      position:absolute;inset:0;opacity:.12;
+      background:repeating-linear-gradient(0deg, transparent 0 22px, #6b573b 23px 24px);
+      pointer-events:none;
+    }
+    h1{margin:0;font-size:2.1rem;letter-spacing:.03em;text-transform:uppercase;position:relative}
+    .stamp{
+      display:inline-block;border:3px solid var(--red);color:var(--red);padding:7px 12px;
+      transform:rotate(-5deg);font-weight:bold;letter-spacing:.08em;text-transform:uppercase;margin-top:14px;
+      background:rgba(255,255,255,.18)
+    }
+    .filemeta{position:relative;margin-top:14px;font-family:Arial,sans-serif;font-size:.95rem;line-height:1.5}
+    .panel{
+      background:linear-gradient(135deg,var(--paper),#f3e8cf);
+      border:2px solid #6b573b;
+      margin-top:24px;
+      padding:22px;
+      box-shadow:0 10px 30px var(--shadow);
+      position:relative;
+    }
+    h2{margin:0 0 12px;text-transform:uppercase;font-size:1.35rem;border-bottom:2px dashed #8a714d;padding-bottom:8px}
+    h3{margin:14px 0 8px}
+    button,.evidence,.answer{
+      border:2px solid #755f3e;
+      background:#f6ebcf;
+      color:var(--ink);
+      padding:12px 14px;
+      border-radius:6px;
+      font-weight:bold;
+      cursor:pointer;
+      font-family:Arial,sans-serif;
+      transition:.15s transform,.15s background,.15s border-color;
+    }
+    button:hover,.evidence:hover,.answer:hover{transform:translateY(-1px);background:#fff3d6}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .scorebar{font-family:Arial,sans-serif;margin-top:12px;font-weight:bold}
+    .mapbox{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:18px;
+      align-items:start;
+    }
+    .map{
+      border:2px solid #7b6747;
+      background:#dcc69a;
+      min-height:390px;
+      position:relative;
+      overflow:hidden;
+    }
+    .map svg{width:100%;height:390px;display:block}
+    .dot{
+      fill:var(--red);
+      stroke:#6d0f0f;
+      stroke-width:2;
+      cursor:pointer;
+    }
+    .dot:hover{fill:#c82d2d}
+    .dotText{fill:#fff;font:700 15px Arial;pointer-events:none}
+    .city{fill:#27211a;font:700 14px Arial}
+    .route{fill:none;stroke:var(--red);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+    .route2{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:8 7;opacity:.75}
+    .question{
+      border:2px dashed #8a714d;
+      padding:14px;
+      margin-bottom:12px;
+      background:rgba(255,255,255,.18);
+      font-family:Arial,sans-serif;
+    }
+    .feedback{font-weight:bold;margin-top:8px;min-height:22px}
+    .ok{color:var(--green)}
+    .bad{color:var(--red)}
+    .evidenceGrid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+      gap:12px;
+      margin:12px 0 14px;
+    }
+    .evidence.selected{outline:4px solid #b9822c;background:#fff2ca}
+    .target{
+      min-height:74px;
+      border:2px dashed #8a714d;
+      padding:12px;
+      border-radius:6px;
+      background:rgba(255,255,255,.18);
+      font-family:Arial,sans-serif;
+      font-weight:bold;
+      cursor:pointer;
+    }
+    .target.done{border-style:solid;border-color:var(--green);background:#e7f0dc}
+    .tiny{font-size:.9rem;font-weight:normal;margin-top:4px}
+    .witness{
+      display:grid;
+      grid-template-columns:130px 1fr;
+      gap:14px;
+      padding:14px;
+      border:2px dashed #8a714d;
+      margin:12px 0;
+      background:rgba(255,255,255,.18);
+    }
+    .portrait{
+      min-height:110px;
+      border:2px solid #8a714d;
+      background:#e6d2a7;
+      display:flex;align-items:center;justify-content:center;
+      font-family:Arial,sans-serif;font-weight:bold;text-align:center;
+    }
+    .answers{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .answer.correct{background:#dcebd0;border-color:var(--green)}
+    .answer.wrong{background:#f1d0c8;border-color:var(--red)}
+    .tf,.mc{border:2px dashed #8a714d;background:rgba(255,255,255,.16);padding:14px;margin:12px 0;font-family:Arial,sans-serif}
+    .small{font-size:.9rem;color:#4b3d2c}
+    .result{
+      font-size:1.2rem;
+      font-weight:bold;
+      margin-top:16px;
+      padding:16px;
+      border:3px solid #6b573b;
+      background:#f6ebcf;
+      display:none;
+    }
+    @media(max-width:800px){
+      .mapbox{grid-template-columns:1fr}
+      .witness{grid-template-columns:1fr}
+      h1{font-size:1.65rem}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ermittlungsprüfung – Sommerfall 2010</h1>
+    <div class="stamp">Vertraulich</div>
+    <div class="filemeta">
+      <strong>Aktenzeichen:</strong> 2010-DJ-014<br>
+      <strong>Betreff:</strong> Fall von Maik Klingenberg & Andrej Tschichatschow<br>
+      <strong>Modus:</strong> Interaktive Fallprüfung zur Ermittlungsakte
+    </div>
+    <div class="scorebar">Punkte: <span id="score">0</span> / <span id="total">0</span></div>
+  </header>
+
+  <section class="panel">
+    <h2>1. Tatorte rekonstruieren</h2>
+    <p class="small">Klicke jeweils den passenden Ort auf der Karte an.</p>
+    <div class="mapbox">
+      <div class="map">
+        <svg viewBox="0 0 760 430" role="img" aria-label="Rekonstruierte Karte der Tatorte">
+          <rect x="0" y="0" width="760" height="430" fill="#dec99d"/>
+          <path d="M60 70 L130 45 L220 85 L335 55 L480 72 L650 50 L710 95 L690 190 L720 280 L625 360 L500 330 L420 385 L290 340 L185 375 L95 290 L45 195 Z" fill="#d4bd8d" stroke="#6b573b" stroke-width="3"/>
+          <path d="M150 55 C160 120 145 175 180 245 C205 290 195 330 220 365" fill="none" stroke="#6d89a0" stroke-width="3" opacity=".6"/>
+          <path d="M410 65 C390 140 410 190 395 250 C385 300 420 345 410 382" fill="none" stroke="#6d89a0" stroke-width="3" opacity=".55"/>
+          <path d="M80 170 C180 135 280 145 375 165 C500 190 595 165 700 205" fill="none" stroke="#6b573b" stroke-width="2" opacity=".65"/>
+          <path d="M130 300 C230 270 315 292 410 255 C500 220 590 240 690 285" fill="none" stroke="#6b573b" stroke-width="2" opacity=".65"/>
+
+          <path class="route" d="M570 95 C500 125 430 130 350 135"/>
+          <path class="route" d="M350 135 C320 170 300 190 275 220"/>
+          <path class="route" d="M275 220 C330 235 395 250 455 265"/>
+          <path class="route" d="M455 265 C510 285 535 315 560 345"/>
+          <path class="route2" d="M560 345 C610 350 630 320 645 290"/>
+          <path class="route2" d="M645 290 C665 265 685 250 705 230"/>
+
+          <circle class="dot" data-place="berlin" cx="570" cy="95" r="17"></circle><text class="dotText" x="565" y="101">1</text>
+          <circle class="dot" data-place="werder" cx="350" cy="135" r="17"></circle><text class="dotText" x="345" y="141">2</text>
+          <circle class="dot" data-place="zwietow" cx="275" cy="220" r="17"></circle><text class="dotText" x="270" y="226">3</text>
+          <circle class="dot" data-place="welzow" cx="455" cy="265" r="17"></circle><text class="dotText" x="450" y="271">4</text>
+          <circle class="dot" data-place="senftenberg" cx="560" cy="345" r="17"></circle><text class="dotText" x="555" y="351">5</text>
+          <circle class="dot" data-place="autobahn" cx="705" cy="230" r="17"></circle><text class="dotText" x="700" y="236">6</text>
+
+          <text class="city" x="590" y="96">Berlin-Marzahn</text>
+          <text class="city" x="368" y="136">Werder (Havel)</text>
+          <text class="city" x="290" y="224">Zwietow</text>
+          <text class="city" x="475" y="268">Welzow</text>
+          <text class="city" x="580" y="348">Senftenberg</text>
+          <text class="city" x="590" y="225">Autobahn bei Senftenberg</text>
+        </svg>
+      </div>
+      <div>
+        <div class="question">
+          <strong id="mapQuestion">Aufgabe wird geladen...</strong>
+          <div class="feedback" id="mapFeedback"></div>
+          <button id="nextMap" style="display:none">Nächste Tatortfrage</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Beweise zuordnen</h2>
+    <p class="small">Tippe zuerst ein Beweisstück an, danach den passenden Zielkasten. Diese Version funktioniert auch auf dem iPad.</p>
+    <div class="evidenceGrid" id="evidenceGrid"></div>
+    <div class="evidenceGrid" id="targetGrid"></div>
+    <div class="feedback" id="evidenceFeedback"></div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Zeugenbefragung</h2>
+    <p class="small">Wähle jeweils die Aussage, die zur genannten Person passt.</p>
+    <div id="witnesses"></div>
+  </section>
+
+  <section class="panel">
+    <h2>4. Abschlussbericht</h2>
+    <h3>Richtig oder falsch?</h3>
+    <div id="trueFalse"></div>
+
+    <h3>Multiple Choice</h3>
+    <div id="multiChoice"></div>
+
+    <button id="showResult">Ermittlungsrang berechnen</button>
+    <div class="result" id="resultBox"></div>
+  </section>
+</div>
+
+<script>
+  let score = 0;
+  let total = 0;
+  const scored = new Set();
+
+  function addPoint(id){
+    if(!scored.has(id)){
+      scored.add(id);
+      score++;
+      document.getElementById('score').textContent = score;
+    }
+  }
+  function setTotal(n){
+    total = n;
+    document.getElementById('total').textContent = total;
+  }
+
+  const mapTasks = [
+    {q:"Klicke auf den Ort, an dem die Beschuldigten gemeinsam mit Isa Benzin stehlen.", a:"welzow"},
+    {q:"Klicke auf den Ort, an dem Maik Tatjana sein selbst gezeichnetes Bild übergibt.", a:"werder"},
+    {q:"Klicke auf den Ort, an dem die Reise durch die Kollision mit einem LKW endgültig endet.", a:"autobahn"},
+    {q:"Klicke auf den Ort, an dem der Lada Niva erstmals als Tatfahrzeug auftaucht.", a:"berlin"},
+    {q:"Klicke auf den Ort, an dem Maik und Tschick der Familie Friedmann begegnen.", a:"zwietow"},
+    {q:"Klicke auf den Ort, an dem es zum ersten Unfall kommt und die Jugendlichen anschliessend ins Krankenhaus gebracht werden.", a:"senftenberg"}
+  ];
+  let mapIndex = 0;
+
+  function loadMapTask(){
+    document.getElementById('mapQuestion').textContent = mapTasks[mapIndex].q;
+    document.getElementById('mapFeedback').textContent = "";
+    document.getElementById('mapFeedback').className = "feedback";
+    document.getElementById('nextMap').style.display = "none";
+  }
+  document.querySelectorAll('.dot').forEach(dot=>{
+    dot.addEventListener('click', ()=>{
+      const current = mapTasks[mapIndex];
+      const fb = document.getElementById('mapFeedback');
+      if(dot.dataset.place === current.a){
+        fb.textContent = "Richtig. Tatort korrekt rekonstruiert.";
+        fb.className = "feedback ok";
+        addPoint("map"+mapIndex);
+        document.getElementById('nextMap').style.display = mapIndex < mapTasks.length-1 ? "inline-block" : "none";
+        if(mapIndex === mapTasks.length-1) fb.textContent += " Alle Tatorte abgeschlossen.";
+      } else {
+        fb.textContent = "Falsch. Prüfe die Karte und die Ereignisse nochmals.";
+        fb.className = "feedback bad";
+      }
+    });
+  });
+  document.getElementById('nextMap').addEventListener('click', ()=>{
+    if(mapIndex < mapTasks.length-1){ mapIndex++; loadMapTask(); }
+  });
+
+  const evidence = [
+    {item:"Beyoncé-Bild", target:"Tatjana Cosic"},
+    {item:"Dienstfahrrad", target:"Dorfpolizist"},
+    {item:"Feuerlöscher", target:"Mona Heckel"},
+    {item:"Schlauch / Benzin", target:"Isa Schmidt"},
+    {item:"Lada Niva", target:"Tschick"}
+  ];
+  let selectedEvidence = null;
+  const evidenceGrid = document.getElementById('evidenceGrid');
+  const targetGrid = document.getElementById('targetGrid');
+
+  evidence.forEach((e)=>{
+    const div=document.createElement('div');
+    div.className='evidence';
+    div.textContent=e.item;
+    div.dataset.item=e.item;
+    div.addEventListener('click', ()=>{
+      document.querySelectorAll('.evidence').forEach(x=>x.classList.remove('selected'));
+      div.classList.add('selected');
+      selectedEvidence=e.item;
+      document.getElementById('evidenceFeedback').textContent="Ausgewählt: "+e.item+". Tippe nun auf den passenden Zielkasten.";
+      document.getElementById('evidenceFeedback').className="feedback";
+    });
+    evidenceGrid.appendChild(div);
+  });
+
+  evidence.forEach((e)=>{
+    const div=document.createElement('div');
+    div.className='target';
+    div.innerHTML=e.target+'<div class="tiny">Beweis hier zuordnen</div>';
+    div.dataset.target=e.target;
+    div.addEventListener('click', ()=>{
+      const fb=document.getElementById('evidenceFeedback');
+      if(!selectedEvidence){
+        fb.textContent="Wähle zuerst ein Beweisstück aus.";
+        fb.className="feedback bad";
+        return;
+      }
+      const correct = evidence.find(x=>x.item===selectedEvidence && x.target===e.target);
+      if(correct){
+        div.classList.add('done');
+        div.innerHTML=e.target+'<div class="tiny">Zugeordnet: '+selectedEvidence+'</div>';
+        addPoint("evidence"+e.target);
+        fb.textContent="Richtig zugeordnet.";
+        fb.className="feedback ok";
+        const card=[...document.querySelectorAll('.evidence')].find(x=>x.dataset.item===selectedEvidence);
+        if(card){card.style.opacity=.35;card.style.pointerEvents='none';card.classList.remove('selected');}
+        selectedEvidence=null;
+      } else {
+        fb.textContent="Falsch zugeordnet. Dieser Beweis passt nicht zu diesem Ziel.";
+        fb.className="feedback bad";
+      }
+    });
+    targetGrid.appendChild(div);
+  });
+
+  const witnessData = [
+    {
+      name:"Tatjana Cosic",
+      role:"Zeugin im Zusammenhang mit der Geburtstagsfeier in Werder.",
+      options:[
+        "Maik übergab mir ein selbst gezeichnetes Bild.",
+        "Die beiden fragten nach dem Weg und nach den Himmelsrichtungen.",
+        "Ich brachte die Jugendlichen ins Krankenhaus."
+      ],
+      answer:0
+    },
+    {
+      name:"Herr Friedmann",
+      role:"Zeuge in Zwietow; Begegnung mit den Beschuldigten zusammen mit seiner Familie.",
+      options:[
+        "Mein Dienstfahrrad wurde entwendet.",
+        "Die beiden fragten nach dem Weg und nach den Himmelsrichtungen. Sie wirkten freundlich und nicht gefährlich.",
+        "Ich war Gastgeber der Geburtstagsfeier."
+      ],
+      answer:1
+    },
+    {
+      name:"Frau Friedmann",
+      role:"Zeugin beim gemeinsamen Mittagessen.",
+      options:[
+        "Die Jugendlichen nahmen an einem gemeinsamen Mittagessen teil. Sie wirkten höflich und verhielten sich unauffällig.",
+        "Ich kontrollierte die Kennzeichen.",
+        "Ich fuhr den Lastwagen auf der Autobahn."
+      ],
+      answer:0
+    },
+    {
+      name:"Horst Fricke",
+      role:"Zeuge aus dem verlassenen Dorf.",
+      options:[
+        "Ich zeigte ihnen, wie man Benzin abzapft.",
+        "Ich erhielt ein selbst gemaltes Bild.",
+        "Ich begegnete den Jungen im verlassenen Dorf und erzählte ihnen aus meinem Leben."
+      ],
+      answer:2
+    },
+    {
+      name:"Mona Heckel",
+      role:"Zeugin nach dem ersten Unfall.",
+      options:[
+        "Ich brachte die Jugendlichen nach dem Unfall ins Krankenhaus.",
+        "Mein Dienstfahrrad wurde gestohlen.",
+        "Ich bewirtete die Jugendlichen beim Mittagessen."
+      ],
+      answer:0
+    },
+    {
+      name:"Dorfpolizist",
+      role:"Betroffener Beamter bei der Kontrolle.",
+      options:[
+        "Mein Dienstfahrrad wurde entwendet.",
+        "Ich traf die Jugendlichen im verlassenen Dorf.",
+        "Ich brachte sie ins Krankenhaus."
+      ],
+      answer:0
+    }
+  ];
+
+  const witnesses = document.getElementById('witnesses');
+  witnessData.forEach((w,idx)=>{
+    const box=document.createElement('div');
+    box.className='witness';
+    box.innerHTML=`<div class="portrait">${w.name}</div><div><strong>Zeuge/Zeugin: ${w.name}</strong><br><span class="small">${w.role}</span><br><strong>Welche Aussage passt?</strong><div class="answers"></div><div class="feedback"></div></div>`;
+    const answers=box.querySelector('.answers');
+    const fb=box.querySelector('.feedback');
+    w.options.forEach((opt,i)=>{
+      const btn=document.createElement('button');
+      btn.className='answer';
+      btn.textContent=String.fromCharCode(65+i)+") „"+opt+"“";
+      btn.addEventListener('click', ()=>{
+        if(i===w.answer){
+          btn.classList.add('correct');
+          fb.textContent="Richtig.";
+          fb.className="feedback ok";
+          addPoint("witness"+idx);
+        } else {
+          btn.classList.add('wrong');
+          fb.textContent="Falsch.";
+          fb.className="feedback bad";
+        }
+      });
+      answers.appendChild(btn);
+    });
+    witnesses.appendChild(box);
+  });
+
+  const tfData = [
+    {q:"Die Reise beginnt in Berlin-Marzahn.", a:true},
+    {q:"Maik besitzt einen Führerschein.", a:false},
+    {q:"Tatjana lädt Maik persönlich zu ihrer Party ein.", a:false},
+    {q:"Isa begleitet die Jungen zeitweise auf ihrer Reise.", a:true},
+    {q:"Tschick gesteht Maik später, dass er schwul ist.", a:true},
+    {q:"Frau Friedmann alarmiert sofort die Polizei.", a:false},
+    {q:"Die Jungen tauschen unterwegs Kennzeichen aus.", a:true},
+    {q:"Horst Fricke lebt in einem verlassenen Dorf.", a:true},
+    {q:"Der Lada Niva wird von Tschick gestohlen.", a:true},
+    {q:"Maiks Mutter begleitet die Reise.", a:false}
+  ];
+  const tfBox=document.getElementById('trueFalse');
+  tfData.forEach((t,idx)=>{
+    const div=document.createElement('div');
+    div.className='tf';
+    div.innerHTML=`<strong>${idx+1}. ${t.q}</strong><div class="answers"></div><div class="feedback"></div>`;
+    const ans=div.querySelector('.answers');
+    const fb=div.querySelector('.feedback');
+    [
+      {label:"Richtig", val:true},
+      {label:"Falsch", val:false}
+    ].forEach(opt=>{
+      const btn=document.createElement('button');
+      btn.className='answer';
+      btn.textContent=opt.label;
+      btn.addEventListener('click', ()=>{
+        if(opt.val===t.a){
+          btn.classList.add('correct');
+          fb.textContent="Korrekt.";
+          fb.className="feedback ok";
+          addPoint("tf"+idx);
+        } else {
+          btn.classList.add('wrong');
+          fb.textContent="Nicht korrekt.";
+          fb.className="feedback bad";
+        }
+      });
+      ans.appendChild(btn);
+    });
+    tfBox.appendChild(div);
+  });
+
+  const mcData = [
+    {
+      q:"Warum wird gegen Maik und Tschick ermittelt?",
+      opts:[
+        "Wegen Schwarzfahrens",
+        "Wegen eines gestohlenen Fahrzeugs, Fahrens ohne Führerschein und mehrerer Unfälle",
+        "Wegen Ladendiebstahls",
+        "Wegen Sachbeschädigung an einer Schule"
+      ],
+      a:1
+    },
+    {
+      q:"Welche Bedeutung hat Werder (Havel)?",
+      opts:[
+        "Dort findet der erste Unfall statt.",
+        "Dort trifft Maik Tatjana und übergibt ihr sein Bild.",
+        "Dort treffen die Jungen Isa.",
+        "Dort endet die Reise."
+      ],
+      a:1
+    },
+    {
+      q:"Welche Beschreibung passt am besten zu Maik?",
+      opts:[
+        "Er ist ein erfahrener Autodieb.",
+        "Er ist Aussenseiter und gewinnt auf der Reise Selbstvertrauen.",
+        "Er plant die Reise jahrelang.",
+        "Er arbeitet für die Polizei."
+      ],
+      a:1
+    },
+    {
+      q:"Warum ist die Aussage der Familie Friedmann wichtig?",
+      opts:[
+        "Sie beweist den Autodiebstahl.",
+        "Sie zeigt, dass die Jugendlichen auch freundlich und unauffällig wirken konnten.",
+        "Sie erklärt den Unfall.",
+        "Sie identifiziert den Besitzer des LKW."
+      ],
+      a:1
+    },
+    {
+      q:"Warum wechseln die Jungen Kennzeichen?",
+      opts:[
+        "Sie wollen das Fahrzeug verkaufen.",
+        "Sie wollen die Herkunft des Fahrzeugs verschleiern.",
+        "Das Auto braucht neue Kennzeichen.",
+        "Die Polizei verlangt es."
+      ],
+      a:1
+    },
+    {
+      q:"Welche Rolle spielt Horst Fricke?",
+      opts:[
+        "Besitzer des Lada Niva",
+        "Lastwagenfahrer",
+        "Bewohner eines verlassenen Dorfes und wichtiger Zeuge der Reise",
+        "Polizeibeamter"
+      ],
+      a:2
+    },
+    {
+      q:"Welches Ziel verfolgt die Reise am ehesten?",
+      opts:[
+        "Die Jungen wollen nach Italien auswandern.",
+        "Die Jungen fliehen gezielt vor der Polizei.",
+        "Die Reise wird zu einer Suche nach Freiheit, Abenteuer und Selbstfindung.",
+        "Die Jungen wollen ein Autorennen gewinnen."
+      ],
+      a:2
+    },
+    {
+      q:"Was verändert sich bei Maik im Verlauf der Handlung am stärksten?",
+      opts:[
+        "Seine schulischen Leistungen",
+        "Sein Selbstvertrauen und sein Blick auf andere Menschen",
+        "Seine sportlichen Fähigkeiten",
+        "Seine Familie"
+      ],
+      a:1
+    }
+  ];
+  const mcBox=document.getElementById('multiChoice');
+  mcData.forEach((m,idx)=>{
+    const div=document.createElement('div');
+    div.className='mc';
+    div.innerHTML=`<strong>${idx+1}. ${m.q}</strong><div class="answers"></div><div class="feedback"></div>`;
+    const ans=div.querySelector('.answers');
+    const fb=div.querySelector('.feedback');
+    m.opts.forEach((opt,i)=>{
+      const btn=document.createElement('button');
+      btn.className='answer';
+      btn.textContent=String.fromCharCode(65+i)+") "+opt;
+      btn.addEventListener('click', ()=>{
+        if(i===m.a){
+          btn.classList.add('correct');
+          fb.textContent="Richtig.";
+          fb.className="feedback ok";
+          addPoint("mc"+idx);
+        } else {
+          btn.classList.add('wrong');
+          fb.textContent="Falsch.";
+          fb.className="feedback bad";
+        }
+      });
+      ans.appendChild(btn);
+    });
+    mcBox.appendChild(div);
+  });
+
+  const TOTAL = mapTasks.length + evidence.length + witnessData.length + tfData.length + mcData.length;
+  setTotal(TOTAL);
+  loadMapTask();
+
+  document.getElementById('showResult').addEventListener('click', ()=>{
+    const percent=Math.round(score/TOTAL*100);
+    let rank="Praktikant der Kripo";
+    if(percent>=91) rank="Leitender Ermittler im Fall Tschick";
+    else if(percent>=71) rank="Kriminalkommissar";
+    else if(percent>=41) rank="Polizeimeister";
+    const box=document.getElementById('resultBox');
+    box.style.display='block';
+    box.innerHTML=`Ergebnis: ${score} von ${TOTAL} Punkten (${percent}%).<br>Ermittlungsrang: ${rank}.`;
+  });
+</script>
+</body>
+</html>
